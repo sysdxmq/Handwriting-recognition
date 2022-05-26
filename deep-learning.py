@@ -1,10 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import time
-import torch
 from matplotlib.image import imread
 from PIL import Image
-
 from mnist import Mnist
 from functions import Functions
 
