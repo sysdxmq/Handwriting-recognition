@@ -68,13 +68,13 @@ def load_mnist():
     mnist_path_test_data = "./source/mnist/t10k-images.idx3-ubyte"
     mnist_path_test_label = "./source/mnist/t10k-labels.idx1-ubyte"
 
-    train_data = Mnist(data_path=mnist_path_train_data, label_path=mnist_path_train_label, normalize=True)
-    train_images = train_data.load_data(flatten=False)
+    train_data = Mnist(data_path=mnist_path_train_data, label_path=mnist_path_train_label)
+    train_images = train_data.load_data(flatten=False, normalize=True)
     train_labels = train_data.load_label(one_hot=False)
 
-    test_data = Mnist(data_path=mnist_path_test_data, label_path=mnist_path_test_label, normalize=True)
-    test_images = test_data.load_data()
-    test_labels = test_data.load_label()
+    test_data = Mnist(data_path=mnist_path_test_data, label_path=mnist_path_test_label)
+    test_images = test_data.load_data(flatten=False, normalize=True)
+    test_labels = test_data.load_label(one_hot=False)
 
     return [train_images, train_labels, test_images, test_labels]
 

@@ -6,14 +6,36 @@ from PIL import Image
 class Mnist:
     def __init__(self,
                  data_path="./source/mnist/t10k-images.idx3-ubyte",
-                 label_path="./source/mnist/t10k-labels.idx1-ubyte",
-                 normalize=False):
+                 label_path="./source/mnist/t10k-labels.idx1-ubyte"):
         self.data_path = data_path
         self.label_path = label_path
-        self.normalize = normalize
         pass
 
-    def load_data(self, flatten=False):
+    def load_data(self, flatten=False, normalize=False):
+        """
+        load data(self, flatten=False, normalize=False)
+
+        load data in self.data_path
+
+        flatten :
+            False:
+                return ndarray in shape (number, rows, cols)
+            True :
+                return ndarray in shape (number, rows * cols)
+
+        number :
+            the number of the images, always 60000 or 10000
+        rows   :
+            rows of one single image, always 28
+        cols   :
+            cols of one single image, always 28
+
+        normalize :
+            False:
+                return ndarray in range 0 to 255
+            True :
+                return ndarray in range 0 to 1
+        """
         data_file = open(self.data_path, 'rb')
         magic, number, rows, cols = struct.unpack('>IIII', data_file.read(16))
         if magic != 2051:
@@ -27,12 +49,28 @@ class Mnist:
             images = np.reshape(images, (number, rows * cols))
         else:
             images = np.reshape(images, (number, rows, cols))
-        if self.normalize:
+        if normalize:
             images = images.astype('float64')
             images /= 255.0
         return images
 
     def load_label(self, one_hot=False):
+        """
+        load label(self, one_hot=False)
+
+        load label in self.label_path.
+
+        one_hot :
+            False:
+                return ndarray in shape (number).
+            True :
+                return ndarray in shape (number, 10).
+
+        number :
+            the number of the labels.
+        10     :
+            kinds of the digit.
+        """
         label_file = open(self.label_path, 'rb')
         magic, number = struct.unpack('>II', label_file.read(8))
         if magic != 2049:
