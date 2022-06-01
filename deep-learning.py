@@ -5,6 +5,7 @@ from matplotlib.image import imread
 from PIL import Image
 from mnist import Mnist
 from functions import Functions
+from computation_graphs import *
 
 
 class Network:
