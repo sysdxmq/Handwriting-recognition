@@ -16,3 +16,8 @@ class Functions:
     @staticmethod
     def relu(a):
         return np.maximum(a, 0)
+
+    @staticmethod
+    def cross_entropy_error(y, t):
+        delta = 1e-7
+        return -np.sum(t * np.log(y + delta))

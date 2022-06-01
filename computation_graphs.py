@@ -1,4 +1,5 @@
 import numpy as np
+from functions import Functions
 
 
 class AddLayer:
@@ -46,4 +47,23 @@ class ReLULayer:
     def backward(self, diff_out):
         diff_out[self.mask] = 0
         dx = diff_out
+        return dx
+
+
+class SoftmaxWithLoss:
+    def __init__(self):
+        self.loss = None  # 损失
+        self.y = None  # softmax输出
+        self.t = None  # 监督数据（one-hot vector）
+        pass
+
+    def forward(self, in_x, in_t):
+        self.t = in_t
+        self.y = Functions.softmax(in_x)
+        self.loss = Functions.cross_entropy_error(self.y, self.t)
+        return self.loss
+
+    def backward(self, diff_out=1):
+        batch_size = self.t.shape[0]
+        dx = (self.y - self.t) / batch_size
         return dx

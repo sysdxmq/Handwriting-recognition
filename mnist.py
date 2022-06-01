@@ -37,6 +37,7 @@ class Mnist:
                 return ndarray in range 0 to 1
         """
         data_file = open(self.data_path, 'rb')
+        # train_number: 60000, test_number: 10000
         magic, number, rows, cols = struct.unpack('>IIII', data_file.read(16))
         if magic != 2051:
             return []
@@ -72,6 +73,7 @@ class Mnist:
             kinds of the digit.
         """
         label_file = open(self.label_path, 'rb')
+        # train_number: 60000, test_number: 10000
         magic, number = struct.unpack('>II', label_file.read(8))
         if magic != 2049:
             return []
