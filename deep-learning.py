@@ -7,18 +7,21 @@ from computation_graphs import *
 
 
 class Network:
-    def __init__(self, input_shape=2, output_shape=3, learning_rate=0.1, iter_per_epoch=10,
+    def __init__(self, input_shape=2, output_shape=3, size_hide_1=64, size_hide_2=16,
+                 learning_rate=0.1, iter_per_epoch=10,
                  activity_func=Functions.softmax, identity_func=Functions.softmax):
         self.input_shape = input_shape
         self.output_shape = output_shape
         self.learning_rate = learning_rate
         self.iter_per_epoch = iter_per_epoch
 
-        self.network = {'W1': np.random.rand(input_shape, 3) - 0.5,
-                        'b1': np.random.rand(3) - 0.5,
-                        'W2': np.random.rand(3, 4) - 0.5,
-                        'b2': np.random.rand(4) - 0.5,
-                        'W3': np.random.rand(4, output_shape) - 0.5,
+        self.size_hide_1 = size_hide_1
+        self.size_hide_2 = size_hide_2
+        self.network = {'W1': np.random.rand(input_shape, self.size_hide_1) - 0.5,
+                        'b1': np.random.rand(self.size_hide_1) - 0.5,
+                        'W2': np.random.rand(self.size_hide_1, self.size_hide_2) - 0.5,
+                        'b2': np.random.rand(self.size_hide_2) - 0.5,
+                        'W3': np.random.rand(self.size_hide_2, output_shape) - 0.5,
                         'b3': np.random.rand(output_shape) - 0.5
                         }
 
@@ -59,8 +62,7 @@ class Network:
         return r3
 
     def backward(self, predicts, labels):
-        loss = self.graphs['SL'].forward(predicts, labels)
-        # print("loss = {}".format(loss))
+        self.graphs['SL'].forward(predicts, labels)
         diff_sl = self.graphs['SL'].backward()
         diff_r3 = self.graphs['R3'].backward(diff_sl)
         diff_a3, diff_b3 = self.graphs['A3'].backward(diff_r3)
@@ -146,7 +148,7 @@ def main():
     train_images, train_labels, test_images, test_labels = load_mnist()
 
     image_shape = 784
-    train_epoch = 1000
+    train_epoch = 100
 
     net = Network(input_shape=image_shape, output_shape=10, iter_per_epoch=60)
     for i in range(train_epoch):
