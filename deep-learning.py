@@ -1,3 +1,4 @@
+import pickle
 import matplotlib.pyplot as plt
 import time
 from matplotlib.image import imread
@@ -8,15 +9,14 @@ from computation_graphs import *
 
 class Network:
     def __init__(self, input_shape=2, output_shape=3, size_hide_1=64, size_hide_2=16,
-                 learning_rate=0.1, iter_per_epoch=10,
-                 activity_func=Functions.softmax, identity_func=Functions.softmax):
+                 learning_rate=0.1, iter_per_epoch=10):
         self.input_shape = input_shape
         self.output_shape = output_shape
+        self.size_hide_1 = size_hide_1
+        self.size_hide_2 = size_hide_2
         self.learning_rate = learning_rate
         self.iter_per_epoch = iter_per_epoch
 
-        self.size_hide_1 = size_hide_1
-        self.size_hide_2 = size_hide_2
         self.network = {'W1': np.random.rand(input_shape, self.size_hide_1) - 0.5,
                         'b1': np.random.rand(self.size_hide_1) - 0.5,
                         'W2': np.random.rand(self.size_hide_1, self.size_hide_2) - 0.5,
@@ -37,16 +37,8 @@ class Network:
                        'SL': SoftmaxWithLoss()
                        }
 
-        self.activity_func = activity_func
-        self.identity_func = identity_func
-
         self.train_log = []
-
-    def activity_function(self, inputs):
-        return self.activity_func(inputs)
-
-    def identity_function(self, inputs):
-        return self.identity_func(inputs)
+        self.correct_rate = 0
 
     def forward(self, inputs):
         m1 = self.graphs['M1'].forward(inputs, self.network['W1'])
@@ -58,7 +50,6 @@ class Network:
         m3 = self.graphs['M3'].forward(r2, self.network['W3'])
         a3 = self.graphs['A3'].forward(m3, self.network['b3'])
         r3 = self.graphs['R3'].forward(a3)
-        # print("r3 = {}".format(r3))
         return r3
 
     def backward(self, predicts, labels):
@@ -91,7 +82,7 @@ class Network:
             predict_before = self.forward(train_batch)
             self.backward(predict_before, label_batch)
 
-        predict = self.forward(train_data.reshape(train_data.shape[0], 28*28))
+        predict = self.forward(train_data.reshape(train_data.shape[0], 28 * 28))
         correct_rate = self.print_correct_rate(predict, train_label)
         self.train_log.append(correct_rate)
 
@@ -102,18 +93,47 @@ class Network:
         plt.plot(x, y)
         plt.show()
 
-    @staticmethod
-    def get_correct_rate(predicts, labels):
+    def get_correct_rate(self, predicts, labels):
         predict = np.argmax(predicts, axis=1)
         label = np.argmax(labels, axis=1)
         corrects = np.sum(predict == label)
-        correct_rate = corrects / labels.shape[0]
-        return correct_rate
+        self.correct_rate = corrects / labels.shape[0]
+        return self.correct_rate
 
     def print_correct_rate(self, predicts, labels):
-        correct_rate = self.get_correct_rate(predicts, labels)
-        print("correct rate: {rate:.2%}".format(rate=correct_rate))
-        return correct_rate
+        self.get_correct_rate(predicts, labels)
+        print("correct rate: {rate:.2%}".format(rate=self.correct_rate))
+        return self.correct_rate
+
+    def save(self):
+        save_file = open("test_correct_rate_{}".format(self.correct_rate) + ".net", 'wb')
+
+        net = {'input_shape': self.input_shape,
+               'output_shape': self.output_shape,
+               'size_hide_1': self.size_hide_1,
+               'size_hide_2': self.size_hide_2,
+               'learning_rate': self.learning_rate,
+               'iter_per_epoch': self.iter_per_epoch,
+               'train_log': self.train_log,
+               'correct_rate': self.correct_rate,
+               'network': self.network
+               }
+
+        pickle.dump(net, save_file)
+        save_file.close()
+
+    def load(self, load_path):
+        load_file = open(load_path, 'rb')
+        net = pickle.load(load_file)
+        self.input_shape = net['input_shape']
+        self.output_shape = net['output_shape']
+        self.size_hide_1 = net['size_hide_1']
+        self.size_hide_2 = net['size_hide_2']
+        self.learning_rate = net['learning_rate']
+        self.iter_per_epoch = net['iter_per_epoch']
+        self.train_log = net['train_log']
+        self.correct_rate = net['correct_rate']
+        self.network = net['network']
 
 
 def lena_show():
@@ -148,7 +168,7 @@ def main():
     train_images, train_labels, test_images, test_labels = load_mnist()
 
     image_shape = 784
-    train_epoch = 100
+    train_epoch = 10
 
     net = Network(input_shape=image_shape, output_shape=10, iter_per_epoch=60)
     for i in range(train_epoch):
@@ -157,8 +177,16 @@ def main():
     net.show_train_log()
 
     print("\n")
-    test = net.forward(test_images.reshape(test_images.shape[0], 28*28))
-    net.print_correct_rate(test, test_labels)
+    test_predict = net.forward(test_images.reshape(test_images.shape[0], 28 * 28))
+    correct_rate = net.print_correct_rate(test_predict, test_labels)
+
+    net.save()
+
+    print("load test:\n")
+    net_test = Network()
+    net_test.load("test_correct_rate_{}.net".format(correct_rate))
+    test_predict = net_test.forward(test_images.reshape(test_images.shape[0], 28 * 28))
+    net_test.print_correct_rate(test_predict, test_labels)
 
 
 if __name__ == '__main__':
