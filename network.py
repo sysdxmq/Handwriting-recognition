@@ -1,4 +1,5 @@
 import pickle
+import time
 import matplotlib.pyplot as plt
 from computation_graphs import *
 
@@ -13,6 +14,7 @@ class Network:
         self.learning_rate = learning_rate
         self.iter_per_epoch = iter_per_epoch
 
+        np.random.seed(int(time.time()))
         self.network = {'W1': np.random.rand(input_shape, self.size_hide_1) - 0.5,
                         'b1': np.random.rand(self.size_hide_1) - 0.5,
                         'W2': np.random.rand(self.size_hide_1, self.size_hide_2) - 0.5,
