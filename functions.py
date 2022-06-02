@@ -8,10 +8,12 @@ class Functions:
 
     @staticmethod
     def softmax(a):
-        max_a = np.max(a, axis=0)
-        exp_a = np.exp(a - max_a)
+        max_a = np.max(a, axis=1)
+        minus_a = (a.T - max_a).T
+        exp_a = np.exp(minus_a)
         exp_sum = np.sum(exp_a, axis=1)
-        return (exp_a.T / exp_sum).T
+        out = (exp_a.T / exp_sum).T
+        return out
 
     @staticmethod
     def relu(a):

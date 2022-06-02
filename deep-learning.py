@@ -87,21 +87,16 @@ class Network:
             label_batch = train_label[i * batch_size: (i + 1) * batch_size]
 
             predict_before = self.forward(train_batch)
-
             self.backward(predict_before, label_batch)
-            # self.print_correct_rate(predict_before, label_batch)
 
-            predict_after = self.forward(train_batch)
-            correct_rate = self.get_correct_rate(predict_after, label_batch)
-            self.train_log.append(correct_rate)
-            # print("\n")
+        predict = self.forward(train_data.reshape(train_data.shape[0], 28*28))
+        correct_rate = self.print_correct_rate(predict, train_label)
+        self.train_log.append(correct_rate)
 
     def show_train_log(self):
         log = np.array(self.train_log)
-        log = log.reshape(self.iter_per_epoch, int(log.shape[0] / self.iter_per_epoch))
-        print(log)
-        x = range(0, log.shape[1])
-        y = np.sum(log, axis=0) / log.shape[0]
+        x = range(0, log.shape[0])
+        y = self.train_log
         plt.plot(x, y)
         plt.show()
 
@@ -151,13 +146,17 @@ def main():
     train_images, train_labels, test_images, test_labels = load_mnist()
 
     image_shape = 784
-    train_epoch = 100
+    train_epoch = 1000
 
     net = Network(input_shape=image_shape, output_shape=10, iter_per_epoch=60)
     for i in range(train_epoch):
         net.train(train_images, train_labels)
 
     net.show_train_log()
+
+    print("\n")
+    test = net.forward(test_images.reshape(test_images.shape[0], 28*28))
+    net.print_correct_rate(test, test_labels)
 
 
 if __name__ == '__main__':
