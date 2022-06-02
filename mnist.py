@@ -13,7 +13,7 @@ class Mnist:
 
     def load_data(self, flatten=False, normalize=False):
         """
-        load data(self, flatten=False, normalize=False)
+        load_data(self, flatten=False, normalize=False)
 
         load data in self.data_path
 
@@ -57,7 +57,7 @@ class Mnist:
 
     def load_label(self, one_hot=False):
         """
-        load label(self, one_hot=False)
+        load_label(self, one_hot=False)
 
         load label in self.label_path.
 
