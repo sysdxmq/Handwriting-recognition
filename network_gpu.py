@@ -1,9 +1,12 @@
 import pickle
 import matplotlib.pyplot as plt
-from computation_graphs import *
+import numpy as np
+import torch
+
+from computation_graphs_gpu import *
 
 
-class Network:
+class NetworkGpu:
     def __init__(self, input_shape=784, output_shape=10, size_hide_1=64, size_hide_2=16,
                  learning_rate=0.1, iter_per_epoch=10):
         self.input_shape = input_shape
@@ -13,13 +16,12 @@ class Network:
         self.learning_rate = learning_rate
         self.iter_per_epoch = iter_per_epoch
 
-        np.random.seed(int(time.time()))
-        self.network = {'W1': np.random.rand(input_shape, self.size_hide_1) - 0.5,
-                        'b1': np.random.rand(self.size_hide_1) - 0.5,
-                        'W2': np.random.rand(self.size_hide_1, self.size_hide_2) - 0.5,
-                        'b2': np.random.rand(self.size_hide_2) - 0.5,
-                        'W3': np.random.rand(self.size_hide_2, output_shape) - 0.5,
-                        'b3': np.random.rand(output_shape) - 0.5
+        self.network = {'W1': torch.rand(input_shape, self.size_hide_1, dtype=torch.float64).cuda() - 0.5,
+                        'b1': torch.rand(self.size_hide_1, dtype=torch.float64).cuda() - 0.5,
+                        'W2': torch.rand(self.size_hide_1, self.size_hide_2, dtype=torch.float64).cuda() - 0.5,
+                        'b2': torch.rand(self.size_hide_2, dtype=torch.float64).cuda() - 0.5,
+                        'W3': torch.rand(self.size_hide_2, output_shape, dtype=torch.float64).cuda() - 0.5,
+                        'b3': torch.rand(output_shape, dtype=torch.float64).cuda() - 0.5
                         }
 
         self.graphs = {'M1': MultiLayer(),
@@ -34,7 +36,7 @@ class Network:
                        'SL': SoftmaxWithLoss()
                        }
 
-        self.train_log = []
+        self.train_log = torch.tensor([])
         self.correct_rate = 0
 
     def forward(self, inputs):
@@ -79,11 +81,11 @@ class Network:
         diff_m1, diff_w1 = self.graphs['M1'].backward(diff_a1)
 
         self.network['W3'] -= diff_w3 * self.learning_rate
-        self.network['b3'] -= np.sum(diff_b3, axis=0) * self.learning_rate
+        self.network['b3'] -= torch.sum(diff_b3, 0) * self.learning_rate
         self.network['W2'] -= diff_w2 * self.learning_rate
-        self.network['b2'] -= np.sum(diff_b2, axis=0) * self.learning_rate
+        self.network['b2'] -= torch.sum(diff_b2, 0) * self.learning_rate
         self.network['W1'] -= diff_w1 * self.learning_rate
-        self.network['b1'] -= np.sum(diff_b1, axis=0) * self.learning_rate
+        self.network['b1'] -= torch.sum(diff_b1, 0) * self.learning_rate
 
     def train(self, train_data, train_label):
         """
@@ -96,7 +98,7 @@ class Network:
         train_size = train_label.shape[0]
         batch_size = int(train_size / self.iter_per_epoch)
         for i in range(self.iter_per_epoch):
-            train_batch = np.reshape(train_data[i * batch_size: (i + 1) * batch_size], newshape=(batch_size, 28 * 28))
+            train_batch = torch.reshape(train_data[i * batch_size: (i + 1) * batch_size], shape=(batch_size, 28 * 28))
             label_batch = train_label[i * batch_size: (i + 1) * batch_size]
 
             predict_before = self.forward(train_batch)
@@ -104,14 +106,13 @@ class Network:
 
         predict = self.forward(train_data.reshape(train_data.shape[0], 28 * 28))
         correct_rate = self.print_correct_rate(predict, train_label)
-        self.train_log.append(correct_rate)
+        self.train_log = torch.cat((self.train_log, torch.tensor([correct_rate])), 0)
 
     def show_train_log(self):
         """
         plot train log after training
         """
-        log = np.array(self.train_log)
-        x = range(0, log.shape[0])
+        x = range(0, self.train_log.numel())
         y = self.train_log
         plt.plot(x, y)
         plt.show()
@@ -127,9 +128,9 @@ class Network:
         Returns:
             correct rate
         """
-        predict = np.argmax(predicts, axis=1)
-        label = np.argmax(labels, axis=1)
-        corrects = np.sum(predict == label)
+        predict = torch.argmax(predicts, 1)
+        label = torch.argmax(labels, 1)
+        corrects = torch.sum(predict == label)
         self.correct_rate = corrects / labels.shape[0]
         return self.correct_rate
 

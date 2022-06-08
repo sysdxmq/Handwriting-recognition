@@ -1,5 +1,5 @@
-import numpy as np
-from functions import Functions
+import torch
+from functions_gpu import Functions
 import time
 
 
@@ -14,24 +14,25 @@ class AddLayer:
 
     @staticmethod
     def backward(diff_out):
-        dx = diff_out * 1
-        dy = diff_out * 1
+        dx = diff_out
+        dy = diff_out
         return dx, dy
 
 
 class MultiLayer:
     def __init__(self):
+        torch.cuda.set_device(0)
         self.x = None
         self.y = None
 
     def forward(self, in_x, in_y):
         self.x = in_x
         self.y = in_y
-        return np.dot(self.x, self.y)
+        return self.x @ self.y
 
     def backward(self, diff_out):
-        dx = np.dot(diff_out, np.transpose(self.y))
-        dy = np.dot(np.transpose(self.x), diff_out)
+        dx = diff_out @ self.y.T
+        dy = self.x.T @ diff_out
         return dx, dy
 
 
@@ -41,7 +42,7 @@ class ReLULayer:
 
     def forward(self, in_x):
         self.mask = (in_x <= 0)
-        out = in_x.copy()
+        out = in_x.clone()
         out[self.mask] = 0
         return out
 
@@ -53,6 +54,7 @@ class ReLULayer:
 
 class SoftmaxWithLoss:
     def __init__(self):
+        torch.cuda.set_device(0)
         self.loss = None  # 损失
         self.y = None  # softmax输出
         self.t = None  # 监督数据（one-hot vector）
@@ -72,8 +74,8 @@ class SoftmaxWithLoss:
 
 def main():
     shape = (10000, 10000)
-    x = np.ones(shape)
-    y = np.ones(shape)
+    x = torch.ones(shape)
+    y = torch.ones(shape)
     layer = MultiLayer()
     print(layer.forward(x, y))
 
@@ -81,7 +83,10 @@ def main():
 if __name__ == '__main__':
     start = time.time()
 
-    main()
+    # main()
+    a = torch.randn(3, 3)
+    print(a)
+    print(torch.max(a, 1).values)
 
     end = time.time()
     print("\ntotal run time: {time:.4f}".format(time=end - start))
