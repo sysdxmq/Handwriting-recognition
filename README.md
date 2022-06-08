@@ -20,3 +20,7 @@ Some simple functions, like sigmoid and softmax.
 A trained network with correct rate: *rate* in 100 epoch, this is the training log:
 ![img.png](img.png)
 Load it by *load(rate)* in *deep-learning.py*
+### others
+Files name with gpu are GPU version, which change the numpy to torch. 
+
+Also, the main file deep-learning.py also contain the main_gpu to run the gpu version.
